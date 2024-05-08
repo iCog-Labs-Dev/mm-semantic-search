@@ -1,4 +1,4 @@
-module github.com/mattermost/mattermost-plugin-starter-template
+module github.com/mm-semantic-search/semantic-search-plugin
 
 go 1.21
 
