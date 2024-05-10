@@ -1,5 +1,5 @@
 {
-    "id": "com.snet.semantic-search-plugin",
+    "id": "com.mattermost.semantic-search-plugin",
     "name": "Mattermost Semantic Search",
     "description": "A plugin to search mattermost messages semantically",
     "homepage_url": "https://github.com/mattermost/mattermost-plugin-starter-template",
