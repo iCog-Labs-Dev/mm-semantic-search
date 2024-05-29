@@ -31,7 +31,7 @@ if (NPM_TARGET === 'build:watch' || NPM_TARGET === 'debug:watch') {
 
 const config = {
     entry: [
-        './src/index.tsx',
+        './src/index.ts',
     ],
     resolve: {
         alias: {
