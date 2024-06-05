@@ -1,0 +1,40 @@
+.loader {
+  --independent-variable: 5px;
+  display: inline-block;
+  position: relative;
+  width: calc(var(--independent-variable) * 10);
+  height: calc(var(--independent-variable) * 10);
+  align-self: center;
+  margin-block: auto;
+}
+.loader div {
+  display: inline-block;
+  position: absolute;
+  left: calc(var(--independent-variable) * 1);
+  width: calc(var(--independent-variable) * 1);
+  background: var(--center-channel-color);
+  animation: loading 1.2s cubic-bezier(0, 0.5, 0.5, 1) infinite;
+}
+.loader div:nth-child(1) {
+  left: calc(var(--independent-variable) * 1);
+  animation-delay: -0.24s;
+}
+.loader div:nth-child(2) {
+  left: calc(var(--independent-variable) * 4);
+  animation-delay: -0.12s;
+}
+.loader div:nth-child(3) {
+  left: calc(var(--independent-variable) * 7);
+  animation-delay: 0;
+}
+@keyframes loading {
+  0% {
+    top: calc(var(--independent-variable) * 1);
+    height: calc(var(--independent-variable) * 8);
+  }
+  50%,
+  100% {
+    top: calc(var(--independent-variable) * 3);
+    height: calc(var(--independent-variable) * 4);
+  }
+}
