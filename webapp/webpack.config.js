@@ -2,6 +2,10 @@ const exec = require('child_process').exec;
 
 const path = require('path');
 
+const webpack = require('webpack');
+
+const dotenv = require('dotenv');
+
 const PLUGIN_ID = require('../plugin.json').id;
 
 const NPM_TARGET = process.env.npm_lifecycle_event; //eslint-disable-line no-process-env
@@ -28,6 +32,17 @@ if (NPM_TARGET === 'build:watch' || NPM_TARGET === 'debug:watch') {
         },
     });
 }
+
+// return an Object with a parsed key
+const env = dotenv.config({path: '../.env'}).parsed;
+
+// reduce it to a nice object
+const envKeys = Object.keys(env).reduce((prev, next) => {
+    prev[`process.env.${next}`] = JSON.stringify(env[next]);
+    return prev;
+}, {});
+
+plugins.push(new webpack.DefinePlugin(envKeys));
 
 const config = {
     entry: [
