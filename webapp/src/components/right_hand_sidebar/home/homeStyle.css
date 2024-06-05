@@ -1,0 +1,23 @@
+.home-container {
+    color: var(--center-channel-color);
+    background-color: rgba(var(--center-channel-color-rgb), 0.08);
+    width: 95%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid rgba(var(--center-channel-color-rgb), 0.16);
+    border-radius: 2px;
+    padding: 2rem 2rem;
+    margin-block: auto;
+}
+
+.home-container h2 {
+    text-align: center;
+}
+
+.home-container h4 {
+    text-align: center;
+    line-height: 1.5;
+}
