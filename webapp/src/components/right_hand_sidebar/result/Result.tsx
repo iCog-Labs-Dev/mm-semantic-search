@@ -101,16 +101,18 @@ function Result({item} : any) {
                             <div
                                 className='ss-response-context'
                                 style={{borderColor: source === 'sl' ? '#4A154Baa' : '', borderWidth: source === 'sl' ? '2px' : ''}}
-                                key={time}
+                                key={time + user_id}
                             >
                                 <div className='ss-rc-top'>
                                     <div className='ss-rc-user'>
                                         <div className='ss-rc-user-avatar'>
-                                            {source === 'mm' ? <img
-                                                src={user_avatar}
-                                                alt='avatar'
-                                                className='ss-rc-user-avatar_img'
-                                                               /> : user_name.slice(0, 1)}
+                                            {
+                                                source === 'mm' ? <img
+                                                    src={user_avatar}
+                                                    alt='avatar'
+                                                    className='ss-rc-user-avatar_img'
+                                                                  /> : user_name.slice(0, 1)
+                                            }
                                         </div>
                                         <div className='ss-rc-user-text'>
                                             <a
@@ -163,7 +165,8 @@ function Result({item} : any) {
                                         </span>
                                     </div>
                                     <div className='ss-rc-date'>
-                                        {new Date(Number(time) * 1000).toUTCString()}
+                                        {/* {new Date(Number(time) * 1000).toUTCString()} */}
+                                        {time}
                                     </div>
                                 </div>
                             </div>
