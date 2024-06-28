@@ -10,20 +10,20 @@ import './rightHandSidebarStyle.css'
 
 const RHSView = ({user, patchUser}) => {
     // eslint-disable-next-line no-process-env
-    // const apiURL = process.env.MM_PLUGIN_API_URL;
+    const apiURL = 'http://localhost:4501';
     const [loading, setLoading] = useState(false);
     const inputRef = useRef(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [payload, setPayload] = useState();
 
-    const updateFirstName = () => {
-        const patchedUser = {
-            id: user.id,
-            first_name: 'Tollana',
-        };
+    // const updateFirstName = () => {
+    //     const patchedUser = {
+    //         id: user.id,
+    //         first_name: 'Tollana',
+    //     };
 
-        patchUser(patchedUser); // here we use the action
-    };
+    //     patchUser(patchedUser); // here we use the action
+    // };
 
     const handleSearchQuery = async (e) => {
         e.preventDefault();
@@ -54,74 +54,36 @@ const RHSView = ({user, patchUser}) => {
 
         setLoading(true);
 
-        const res = {
-            context: [
-                {
-                    access: 'pub',
-                    channel_link: 'http://localhost:8065/snet/channels/Town Square',
-                    channel_name: 'Town Square',
-                    message: 'Hello in Town Square!',
-                    message_link: 'http://localhost:8065/snet/pl/s7hzi9a59if6mx6p8t7r1ieh6o',
-                    score: 0.19555227168908074,
-                    source: 'mm',
-                    time: 1699449033.043,
-                    user_dm_link: 'http://localhost:8065/snet/messages/@admin',
-                    user_id: 'rckb7usnibysbczn96bfdqmbch',
-                    user_name: 'admin',
-                },
-                {
-                    access: 'pub',
-                    channel_link: 'http://localhost:8065/snet/channels/Town Square',
-                    channel_name: 'Town Square',
-                    message: 'hi',
-                    message_link: 'http://localhost:8065/snet/pl/ntpzpbhq6bdx7xo8dbi79snaxr',
-                    score: 0.13018758828952404,
-                    source: 'mm',
-                    time: 1704876366.267,
-                    user_dm_link: 'http://localhost:8065/snet/messages/@admin',
-                    user_id: 'rckb7usnibysbczn96bfdqmbch',
-                    user_name: 'admin',
-                },
-            ],
-            llm: '  The answer to your question is:\n\nNo one said "Hi in public channel."\n\nThe chat messages provided do not mention anyone saying "Hi in public channel." The first message is from an administrator saying "Hello in Town Square!" and the second message is from the same administrator saying "hi," but not in a public channel. Therefore, based on the provided chat messages, no one said "Hi in public channel."',
-        };
+        const params = new URLSearchParams({
+            query: searchQuery,
+        });
 
-        const responsePayload = {text: res.llm, context: res.context};
+        const api = `${apiURL}/search?${params.toString()}`;
 
-        console.log('payload: ', responsePayload);
+        fetch(api, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        }).
+            then((res) => res.json()).
+            then((res) => {
+                const responsePayload = {text: res.llm, context: res.context};
+                console.log(responsePayload);
+                setPayload(responsePayload);
+            }).
+            catch((err) => {
+                setPayload({isError: true, text: err.message});
 
-        setPayload(responsePayload);
-
-        setLoading(false);
-
-        // fetch(`${apiURL}/search/something`, {
-        //     method: 'POST',
-        //     headers: {
-        //         'Content-Type': 'application/json',
-        //     },
-        //     credentials: 'include',
-        //     body: JSON.stringify({
-        //         query: searchQuery,
-        //         user_id: currentUser,
-        //     }),
-        // }).
-        //     then((res) => res.json()).
-        //     then((res) => {
-        //         const responsePayload = {text: res.llm, context: res.context};
-        //         setPayload(responsePayload);
-        //     }).
-        //     catch((err) => {
-        //         setPayload({isError: true, text: err.message});
-
-        //         // const errorPayload = {
-        //         //     isError: true,
-        //         //     text: 'Something went wrong. Please try again.',
-        //         // };
-        //         // setPayload(errorPayload);
-        //     }).
-        //     finally(() => {
-        //         setLoading(false);
-        //     });
+                // const errorPayload = {
+                //     isError: true,
+                //     text: 'Something went wrong. Please try again.',
+                // };
+                // setPayload(errorPayload);
+            }).
+            finally(() => {
+                setLoading(false);
+            });
     }, [searchQuery, user.id]);
 
     return (
@@ -138,7 +100,6 @@ const RHSView = ({user, patchUser}) => {
                     placeholder='Search messages'
                 />
             </form>
-            <button onClick={updateFirstName}> {'click  me'} </button>
             <div className='ss-result-wrapper'>
                 {loading ? (
                     <Loader/>
