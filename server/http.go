@@ -27,13 +27,11 @@ func (p *Plugin) initializeAPI() {
 	syncRouter.Use(p.requireAuth)
 	syncRouter.HandleFunc("/start", p.handleStartSync)
 	syncRouter.HandleFunc("/stop", p.handleStopSync)
-	syncRouter.HandleFunc("/progress", p.handleSyncProgress)
 
 	slackRouter := router.PathPrefix("/slack").Subrouter()
 	slackRouter.Use(p.requireAuth)
 	slackRouter.HandleFunc("/upload_zip", p.handleUploadSlackZip)
 	slackRouter.HandleFunc("/store_data", p.handleUploadStoreSlackData)
-	slackRouter.HandleFunc("/store_data_progress", p.handleUploadStoreSlackDataProgress)
 
 	p.router = router
 }
@@ -43,10 +41,8 @@ func (p *Plugin) initializeAPI() {
 // * /search
 // * /sync/start
 // * /sync/stop
-// * /sync/progress
 // * /slack/upload_zip
 // * /slack/store_data
-// * /slack/store_data_progress
 
 // TODO: Fix requireAuth method
 // Authentication handler
@@ -88,10 +84,6 @@ func (p *Plugin) handleStopSync(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Stop Sync")
 }
 
-func (p *Plugin) handleSyncProgress(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "Sync Progress")
-}
-
 // Slack handlers
 
 func (p *Plugin) handleUploadSlackZip(w http.ResponseWriter, r *http.Request) {
@@ -100,8 +92,4 @@ func (p *Plugin) handleUploadSlackZip(w http.ResponseWriter, r *http.Request) {
 
 func (p *Plugin) handleUploadStoreSlackData(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Upload Store Slack Data")
-}
-
-func (p *Plugin) handleUploadStoreSlackDataProgress(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "Upload Store Slack Data Progress")
 }
