@@ -1,2 +1,2 @@
-import manifest from './manifest'
+import manifest from './manifest';
 export default manifest.id;
