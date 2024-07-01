@@ -37,6 +37,14 @@
                 "help_text": "Toggle the semantic search sync. If enabled, the plugin will fetch new messages every 'fetch interval'. If disabled, the plugin will not fetch new messages. Default is false.",
                 "placeholder": "",
                 "default": false
+            },
+            {
+                "key": "timeLeftUntilNextFetch",
+                "display_name": "Time Left Until Next Fetch:",
+                "type": "custom",
+                "help_text": "Time remaining until the next fetch. This is a read-only field. If the plugin is syncing and is not fetching messages, this field will show the time remaining until the next fetch. Otherwise, it will show an appropriate message.",
+                "placeholder": "",
+                "default": "Sync not running"
             }
         ]
     }

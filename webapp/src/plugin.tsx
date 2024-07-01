@@ -5,6 +5,7 @@ import {PluginRegistry} from '@/types/mattermost-webapp';
 
 import SyncIntervalSetting from './components/admin_settings/sync_interval_setting/SyncIntervalSetting';
 import ToggleSyncSetting from './components/admin_settings/toggle_sync_setting/ToggleSyncSetting';
+import TimeLeftUntilNextFetchSetting from './components/admin_settings/time_left_until_next_fetch_setting/TimeLeftUntilNextFetchSetting';
 import RHSView from './components/right_hand_sidebar';
 
 // import reducers from './reducers'
@@ -31,5 +32,7 @@ export default class Plugin {
         registry.registerAdminConsoleCustomSetting('syncInterval', SyncIntervalSetting, {showTitle: true});
 
         registry.registerAdminConsoleCustomSetting('toggleSync', ToggleSyncSetting, {showTitle: true});
+
+        registry.registerAdminConsoleCustomSetting('timeLeftUntilNextFetch', TimeLeftUntilNextFetchSetting, {showTitle: true});
     }
 }

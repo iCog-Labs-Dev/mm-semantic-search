@@ -14,7 +14,7 @@ function ToggleSyncSetting() {
     const [hasError, setHasError] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
     const [isSyncing, setIsSyncing] = useState<boolean>(false);
-    const [isInProgress, setIsInProgress] = useState(false);
+    const [isFetchInProgress, setIsFetchInProgress] = useState(false);
     const [progressPercentage, setProgressPercentage] = useState(0);
 
     useEffect(() => {
@@ -52,7 +52,7 @@ function ToggleSyncSetting() {
                 // eslint-disable-next-line no-console
                 console.log('is fetch in progress', jsonRes);
 
-                setIsInProgress(jsonRes);
+                setIsFetchInProgress(jsonRes);
             }
         };
 
@@ -93,7 +93,7 @@ function ToggleSyncSetting() {
     }, [isSyncing]);
 
     useEffect(() => {
-        if (isInProgress) {
+        if (isFetchInProgress) {
             try {
                 const syncWithServer = async () => {
                     await startSync();
@@ -106,7 +106,7 @@ function ToggleSyncSetting() {
                 setLoading(false);
             }
         }
-    }, [isInProgress]);
+    }, [isFetchInProgress]);
 
     const startSync = async () => {
         // const postObj = {
@@ -121,8 +121,8 @@ function ToggleSyncSetting() {
             // eslint-disable-next-line no-console
             console.log('Sync progress... ', data);
 
-            if (!isInProgress) {
-                setIsInProgress(true);
+            if (!isFetchInProgress) {
+                setIsFetchInProgress(true);
             }
 
             setProgressPercentage(data / 100);
@@ -134,7 +134,7 @@ function ToggleSyncSetting() {
             // eslint-disable-next-line no-console
             console.log('Sync complete... ', data);
 
-            setIsInProgress(false);
+            setIsFetchInProgress(false);
         });
 
         eventSourceStartSync.addEventListener('onStop', (event) => {
@@ -143,7 +143,7 @@ function ToggleSyncSetting() {
             // eslint-disable-next-line no-console
             console.log('Sync stopped... ', data);
 
-            setIsInProgress(false);
+            setIsFetchInProgress(false);
             setIsSyncing(false);
         });
 
@@ -167,7 +167,7 @@ function ToggleSyncSetting() {
             // eslint-disable-next-line no-console
             console.log('Sync stopped... ', data);
 
-            setIsInProgress(false);
+            setIsFetchInProgress(false);
             setIsSyncing(false);
 
             eventSourceStopSync.close();
@@ -208,7 +208,7 @@ function ToggleSyncSetting() {
                     <label className='switch'>
                         <input
                             type='checkbox'
-                            checked={isSyncing || isInProgress}
+                            checked={isSyncing || isFetchInProgress}
                             onChange={(e) => handleSetIsSyncing(e.target.checked)}
                             disabled={loading}
                         />
@@ -216,7 +216,7 @@ function ToggleSyncSetting() {
                     </label>
                 </div>
 
-                {isInProgress ? <div className='ss-setting-sync-progress-wrapper'>
+                {isFetchInProgress ? <div className='ss-setting-sync-progress-wrapper'>
                     <progress
                         className='ss-setting-sync-progress'
                         value={progressPercentage}
