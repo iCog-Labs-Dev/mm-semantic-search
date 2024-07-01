@@ -18,7 +18,7 @@ function SyncIntervalSetting() {
     });
 
     const syncWithServer = useCallback(async () => {
-        const fetchOptions = {
+        const fetchOptions: RequestInit = {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -153,7 +153,7 @@ function SyncIntervalSetting() {
 
         const queryString = new URLSearchParams(param as Record<string, string>).toString();
 
-        const postOptions = {
+        const postOptions: RequestInit = {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

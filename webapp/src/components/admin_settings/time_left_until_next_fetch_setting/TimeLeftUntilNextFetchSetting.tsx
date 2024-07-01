@@ -31,7 +31,7 @@ function TimeLeftUntilNextFetchSetting() {
     const eventSource = useRef<EventSource>();
 
     const syncWithServer = useCallback(async () => {
-        const fetchOptions = {
+        const fetchOptions: RequestInit = {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',

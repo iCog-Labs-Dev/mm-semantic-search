@@ -45,6 +45,14 @@
                 "help_text": "Time remaining until the next fetch. This is a read-only field. If the plugin is syncing and is not fetching messages, this field will show the time remaining until the next fetch. Otherwise, it will show an appropriate message.",
                 "placeholder": "",
                 "default": "Sync not running"
+            },
+            {
+                "key": "uploadSlackExportFile",
+                "display_name": "Upload Slack Export File:",
+                "type": "custom",
+                "help_text": "Upload a Slack export file to the plugin. And choose the channels that will be imported. Furthermore, time range can be specified for each channel, which will be used to filter imported messages from that channel. Otherwise all messages will be imported.",
+                "placeholder": "",
+                "default": null
             }
         ]
     }
