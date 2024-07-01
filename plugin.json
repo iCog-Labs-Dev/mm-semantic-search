@@ -19,8 +19,17 @@
         "bundle_path": "webapp/dist/main.js"
     },
     "settings_schema": {
-        "header": "",
-        "footer": "",
-        "settings": []
+        "header": "Configure your Mattermost Semantic Search Plugin",
+        "footer": "To report an issue, make a suggestion or a contribution, [plugin](https://github.com/iCog-Labs-Dev/mm-semantic-search).",
+        "settings": [
+            {
+                "key": "toggleSync",
+                "display_name": "Toggle Sync:",
+                "type": "custom",
+                "help_text": "Toggle the semantic search sync. If enabled, the plugin will fetch new messages every 'fetch interval'. If disabled, the plugin will not fetch new messages. Default is false.",
+                "placeholder": "",
+                "default": false
+            }
+        ]
     }
 }

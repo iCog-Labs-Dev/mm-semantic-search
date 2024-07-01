@@ -3,6 +3,7 @@ import {Action, Store} from 'redux';
 
 import {PluginRegistry} from '@/types/mattermost-webapp';
 
+import ToggleSyncSetting from './components/admin_settings/toggle_sync_setting/ToggleSyncSetting';
 import RHSView from './components/right_hand_sidebar';
 
 // import reducers from './reducers'
@@ -25,5 +26,7 @@ export default class Plugin {
             'Semantic Search',
             'Semantic Search',
         );
+
+        registry.registerAdminConsoleCustomSetting('toggleSync', ToggleSyncSetting, {showTitle: true});
     }
 }
