@@ -1,8 +1,8 @@
-import React, { Fragment, useEffect, useState } from 'react'
+import React, {Fragment, useEffect, useState} from 'react';
 
-import './toggleSyncSettingStyle.css'
+import './toggleSyncSettingStyle.css';
 
-function ToggleSyncSetting(props: { helpText: { props: { text: string } } }) {
+function ToggleSyncSetting() {
     // eslint-disable-next-line no-process-env
     // const apiURL = process.env.MM_PLUGIN_API_URL;
     const apiURL = 'http://localhost:3333';
@@ -48,7 +48,10 @@ function ToggleSyncSetting(props: { helpText: { props: { text: string } } }) {
 
             if (response?.ok) {
                 const jsonRes = await response.json();
+
+                // eslint-disable-next-line no-console
                 console.log('is fetch in progress', jsonRes);
+
                 setIsInProgress(jsonRes);
             }
         };
@@ -114,6 +117,8 @@ function ToggleSyncSetting(props: { helpText: { props: { text: string } } }) {
 
         eventSourceStartSync.addEventListener('onProgress', (event) => {
             const data = JSON.parse(event.data);
+
+            // eslint-disable-next-line no-console
             console.log('Sync progress... ', data);
 
             if (!isInProgress) {
@@ -125,6 +130,8 @@ function ToggleSyncSetting(props: { helpText: { props: { text: string } } }) {
 
         eventSourceStartSync.addEventListener('onDone', (event) => {
             const data = JSON.parse(event.data);
+
+            // eslint-disable-next-line no-console
             console.log('Sync complete... ', data);
 
             setIsInProgress(false);
@@ -132,6 +139,8 @@ function ToggleSyncSetting(props: { helpText: { props: { text: string } } }) {
 
         eventSourceStartSync.addEventListener('onStop', (event) => {
             const data = JSON.parse(event.data);
+
+            // eslint-disable-next-line no-console
             console.log('Sync stopped... ', data);
 
             setIsInProgress(false);
@@ -139,6 +148,7 @@ function ToggleSyncSetting(props: { helpText: { props: { text: string } } }) {
         });
 
         eventSourceStartSync.onerror = (error) => {
+            // eslint-disable-next-line no-console
             console.error('Start Sync SSE Error:', error);
 
             setHasError(true);
@@ -153,6 +163,8 @@ function ToggleSyncSetting(props: { helpText: { props: { text: string } } }) {
 
         eventSourceStopSync.addEventListener('onStop', (event) => {
             const data = JSON.parse(event.data);
+
+            // eslint-disable-next-line no-console
             console.log('Sync stopped... ', data);
 
             setIsInProgress(false);
@@ -162,6 +174,7 @@ function ToggleSyncSetting(props: { helpText: { props: { text: string } } }) {
         });
 
         eventSourceStopSync.onerror = (error) => {
+            // eslint-disable-next-line no-console
             console.error('Stop Sync SSE Error:', error);
 
             setHasError(true);
@@ -176,10 +189,8 @@ function ToggleSyncSetting(props: { helpText: { props: { text: string } } }) {
 
         try {
             if (checked) {
-                console.log('Start sync');
                 await startSync();
             } else {
-                console.log('Stop sync');
                 await stopSync();
             }
         } catch (err: any) {
@@ -226,9 +237,6 @@ function ToggleSyncSetting(props: { helpText: { props: { text: string } } }) {
             >
                 {errorMessage}
             </p>
-            {/* <p className='ss-toggle-sync-text'>
-                {props.helpText.props.text}
-            </p> */}
         </Fragment>
     );
 }

@@ -3,6 +3,7 @@ import {Action, Store} from 'redux';
 
 import {PluginRegistry} from '@/types/mattermost-webapp';
 
+import SyncIntervalSetting from './components/admin_settings/sync_interval_setting/SyncIntervalSetting';
 import ToggleSyncSetting from './components/admin_settings/toggle_sync_setting/ToggleSyncSetting';
 import RHSView from './components/right_hand_sidebar';
 
@@ -26,6 +27,8 @@ export default class Plugin {
             'Semantic Search',
             'Semantic Search',
         );
+
+        registry.registerAdminConsoleCustomSetting('syncInterval', SyncIntervalSetting, {showTitle: true});
 
         registry.registerAdminConsoleCustomSetting('toggleSync', ToggleSyncSetting, {showTitle: true});
     }

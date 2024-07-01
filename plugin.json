@@ -23,6 +23,14 @@
         "footer": "To report an issue, make a suggestion or a contribution, [plugin](https://github.com/iCog-Labs-Dev/mm-semantic-search).",
         "settings": [
             {
+                "key": "syncInterval",
+                "display_name": "Sync Interval:",
+                "type": "custom",
+                "help_text": "Number of hours or minutes to wait before fetching new messages. Minimum is 1 minute, maximum is (24 hours). Default is 15 minutes.",
+                "placeholder": "",
+                "default": 15
+            },
+            {
                 "key": "toggleSync",
                 "display_name": "Toggle Sync:",
                 "type": "custom",
