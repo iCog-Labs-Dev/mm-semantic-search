@@ -1,4 +1,4 @@
-import React, {Fragment, useEffect, useState} from 'react';
+import React, {Fragment, useEffect, useState, useRef} from 'react';
 
 import './toggleSyncSettingStyle.css';
 
@@ -13,9 +13,13 @@ function ToggleSyncSetting() {
     const [wasSuccessful, setWasSuccessful] = useState(false);
     const [hasError, setHasError] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
-    const [isSyncing, setIsSyncing] = useState<boolean>(false);
+    const [isSyncInProgress, setIsSyncInProgress] = useState<boolean>(false);
     const [isFetchInProgress, setIsFetchInProgress] = useState(false);
     const [progressPercentage, setProgressPercentage] = useState(0);
+    const [reRunEvent, setReRunEvent] = useState(false);
+
+    const eventSource = useRef<EventSource>();
+    const eventSourceStartSync = useRef<EventSource>();
 
     useEffect(() => {
         const fetchSettings = async () => {
@@ -33,7 +37,7 @@ function ToggleSyncSetting() {
             let response;
 
             try {
-                const api = `${apiURL}/sync/is_fetch_in_progress`;
+                const api = `${apiURL}/sync/is_sync_in_progress`;
 
                 response = await fetch(api!, fetchOptions);
             } catch (err: any) {
@@ -49,15 +53,62 @@ function ToggleSyncSetting() {
             if (response?.ok) {
                 const jsonRes = await response.json();
 
-                // eslint-disable-next-line no-console
-                console.log('is fetch in progress', jsonRes);
-
-                setIsFetchInProgress(jsonRes);
+                setIsSyncInProgress(jsonRes);
             }
         };
 
         fetchSettings();
     }, []);
+
+    useEffect(() => {
+        if (eventSource.current) {
+            eventSource.current.close();
+        }
+
+        let interval:NodeJS.Timer;
+
+        eventSource.current = new EventSource(`${apiURL}/sync/status`);
+
+        eventSource.current.addEventListener('onStatusChange', (event) => {
+            const data = JSON.parse(event.data);
+
+            const isSyncInProgressNew = data.is_sync_in_progress;
+            const isFetchInProgressNew = data.is_fetch_in_progress;
+
+            // eslint-disable-next-line max-nested-callbacks
+            setIsSyncInProgress((previousValue) => {
+                if (previousValue === isSyncInProgressNew) {
+                    return previousValue;
+                }
+
+                setWasSuccessful(true);
+
+                return isSyncInProgressNew;
+            });
+
+            // eslint-disable-next-line max-nested-callbacks
+            setIsFetchInProgress((previousValue) => {
+                return previousValue === isFetchInProgressNew ? previousValue : isFetchInProgressNew;
+            });
+        });
+
+        eventSource.current.onerror = (error) => {
+            // console.error('Sync SSE Error:', error);
+
+            eventSource.current?.close();
+
+            interval = setInterval(async () => {
+                // eslint-disable-next-line max-nested-callbacks
+                setReRunEvent((previousValue) => {
+                    return !previousValue;
+                });
+            }, RETRYTIMEINSECONDS);
+        };
+
+        return () => {
+            clearInterval(interval);
+        };
+    }, [reRunEvent, eventSource]);
 
     useEffect(() => {
         if (loading) {
@@ -89,11 +140,8 @@ function ToggleSyncSetting() {
     }, [wasSuccessful]);
 
     useEffect(() => {
-        setWasSuccessful(true);
-    }, [isSyncing]);
-
-    useEffect(() => {
         if (isFetchInProgress) {
+            setLoading(true);
             try {
                 const syncWithServer = async () => {
                     await startSync();
@@ -113,13 +161,16 @@ function ToggleSyncSetting() {
         //     mm_api_url: store.getState().entities.general.config.SiteURL + '/api/v4',
         // };
 
-        const eventSourceStartSync = new EventSource(`${apiURL}/sync/start`);
+        setLoading(true);
+        if (eventSourceStartSync.current) {
+            eventSourceStartSync.current.close();
+        }
 
-        eventSourceStartSync.addEventListener('onProgress', (event) => {
+        eventSourceStartSync.current = new EventSource(`${apiURL}/sync/start`);
+
+        eventSourceStartSync.current.addEventListener('onProgress', (event) => {
             const data = JSON.parse(event.data);
-
-            // eslint-disable-next-line no-console
-            console.log('Sync progress... ', data);
+            setLoading(false);
 
             if (!isFetchInProgress) {
                 setIsFetchInProgress(true);
@@ -128,47 +179,40 @@ function ToggleSyncSetting() {
             setProgressPercentage(data / 100);
         });
 
-        eventSourceStartSync.addEventListener('onDone', (event) => {
-            const data = JSON.parse(event.data);
-
-            // eslint-disable-next-line no-console
-            console.log('Sync complete... ', data);
+        eventSourceStartSync.current.addEventListener('onDone', (event) => {
+            setLoading(false);
 
             setIsFetchInProgress(false);
         });
 
-        eventSourceStartSync.addEventListener('onStop', (event) => {
-            const data = JSON.parse(event.data);
-
-            // eslint-disable-next-line no-console
-            console.log('Sync stopped... ', data);
+        eventSourceStartSync.current.addEventListener('onStop', (event) => {
+            setLoading(false);
 
             setIsFetchInProgress(false);
-            setIsSyncing(false);
+            setIsSyncInProgress(false);
         });
 
-        eventSourceStartSync.onerror = (error) => {
+        eventSourceStartSync.current.onerror = (error) => {
             // eslint-disable-next-line no-console
             console.error('Start Sync SSE Error:', error);
+            setLoading(false);
 
             setHasError(true);
             setErrorMessage('error while receiving start sync event');
 
-            eventSourceStartSync.close();
+            eventSourceStartSync.current?.close();
         };
     };
 
     const stopSync = async () => {
+        setLoading(true);
         const eventSourceStopSync = new EventSource(`${apiURL}/sync/stop`);
 
         eventSourceStopSync.addEventListener('onStop', (event) => {
-            const data = JSON.parse(event.data);
-
-            // eslint-disable-next-line no-console
-            console.log('Sync stopped... ', data);
+            setLoading(false);
 
             setIsFetchInProgress(false);
-            setIsSyncing(false);
+            setIsSyncInProgress(false);
 
             eventSourceStopSync.close();
         });
@@ -176,6 +220,7 @@ function ToggleSyncSetting() {
         eventSourceStopSync.onerror = (error) => {
             // eslint-disable-next-line no-console
             console.error('Stop Sync SSE Error:', error);
+            setLoading(false);
 
             setHasError(true);
             setErrorMessage('error while receiving stop sync event');
@@ -184,7 +229,7 @@ function ToggleSyncSetting() {
         };
     };
 
-    const handleSetIsSyncing = async (checked: boolean) => {
+    const handleSetIsSyncInProgress = async (checked: boolean) => {
         setLoading(true);
 
         try {
@@ -203,13 +248,15 @@ function ToggleSyncSetting() {
 
     return (
         <Fragment>
-            <div className='ss-setting-toggle-sync-container'>
+            {loading ? (
+                <p> {'Loading ...'} </p>
+            ) : (<div className='ss-setting-toggle-sync-container'>
                 <div className='ss-setting-toggle-sync'>
                     <label className='switch'>
                         <input
                             type='checkbox'
-                            checked={isSyncing || isFetchInProgress}
-                            onChange={(e) => handleSetIsSyncing(e.target.checked)}
+                            checked={isSyncInProgress}
+                            onChange={(e) => handleSetIsSyncInProgress(e.target.checked)}
                             disabled={loading}
                         />
                         <span className='slider round'/>
@@ -223,7 +270,7 @@ function ToggleSyncSetting() {
                     />
                     <span className='ss-setting-sync-progress-percentage'>{ ((progressPercentage * 100).toFixed(1)) + '%' }</span>
                 </div> : ''}
-            </div>
+            </div>)}
 
             <p
                 className='ss-toggle-sync-success-message'
