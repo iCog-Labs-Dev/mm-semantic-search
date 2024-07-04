@@ -1,3 +1,4 @@
+/* eslint-disable no-negated-condition */
 /* eslint-disable no-nested-ternary */
 import React, {Fragment, useCallback, useEffect, useRef, useState} from 'react';
 
@@ -18,10 +19,7 @@ function TimeLeftUntilNextFetchSetting() {
         seconds: 0,
     });
 
-    // UNCOMMENT THIS WHEN TESTING
-    // const [lastFetchAt, setLastFetchAt] = useState(new Date('2023-10-04T13:21:00.000Z').getTime());
-
-    const [lastFetchAt, setLastFetchAt] = useState(0);
+    const [lastFetchedAt, setLastFetchedAt] = useState(0);
     const [fetchInterval, setFetchInterval] = useState(0);
     const [isFetchInProgress, setIsFetchInProgress] = useState<boolean>();
     const [isSyncInProgress, setIsSyncInProgress] = useState<boolean>();
@@ -29,6 +27,59 @@ function TimeLeftUntilNextFetchSetting() {
     const [reRunEvent, setReRunEvent] = useState(false);
 
     const eventSource = useRef<EventSource>();
+
+    const getServerState = useCallback(async () => {
+        const fetchOptions: RequestInit = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+
+            // credentials: 'include',
+        };
+
+        setLoading(true);
+
+        let isSyncInProgressRes;
+        let isFetchInProgressRes;
+
+        try {
+            const isSyncInProgressAPI = `${apiURL}/sync/is_sync_in_progress`;
+            const isFetchInProgressAPI = `${apiURL}/sync/is_fetch_in_progress`;
+
+            isSyncInProgressRes = await fetch(isSyncInProgressAPI!, fetchOptions);
+            isFetchInProgressRes = await fetch(isFetchInProgressAPI!, fetchOptions);
+        } catch (err: any) {
+            // eslint-disable-next-line no-console
+            console.warn('Error', err);
+
+            setHasError(true);
+            setErrorMessage(err.message);
+        } finally {
+            setLoading(false);
+        }
+
+        if (isSyncInProgressRes?.ok) {
+            const jsonRes = await isSyncInProgressRes.json();
+
+            setIsSyncInProgress(jsonRes);
+        } else if (isFetchInProgressRes?.ok) {
+            const jsonRes = await isFetchInProgressRes.json();
+
+            setIsFetchInProgress(jsonRes);
+        } else {
+            let jsonErr;
+
+            if (isSyncInProgressRes !== null) {
+                jsonErr = await isSyncInProgressRes?.json();
+            } else if (isFetchInProgressRes !== null) {
+                jsonErr = await isFetchInProgressRes?.json();
+            }
+
+            setHasError(true);
+            setErrorMessage(jsonErr.message);
+        }
+    }, [apiURL]);
 
     const syncWithServer = useCallback(async () => {
         const fetchOptions: RequestInit = {
@@ -64,19 +115,20 @@ function TimeLeftUntilNextFetchSetting() {
         if (lastFetchedAtRes?.ok) {
             const jsonRes = await lastFetchedAtRes.json();
 
-            setLastFetchAt(jsonRes);
-        } else if (fetchIntervalRes?.ok) {
+            setLastFetchedAt(jsonRes);
+        } else {
+            const jsonErr = await lastFetchedAtRes?.json();
+
+            setHasError(true);
+            setErrorMessage(jsonErr.message);
+        }
+
+        if (fetchIntervalRes?.ok) {
             const jsonRes = await fetchIntervalRes.json();
 
             setFetchInterval(jsonRes * 1000);
         } else {
-            let jsonErr;
-
-            if (lastFetchedAtRes !== null) {
-                jsonErr = await lastFetchedAtRes?.json();
-            } else if (fetchIntervalRes !== null) {
-                jsonErr = await fetchIntervalRes?.json();
-            }
+            const jsonErr = await fetchIntervalRes?.json();
 
             setHasError(true);
             setErrorMessage(jsonErr.message);
@@ -84,15 +136,24 @@ function TimeLeftUntilNextFetchSetting() {
     }, [apiURL]);
 
     useEffect(() => {
-        const firstRun = async () => {
+        const executeAsyncFunc = async () => {
+            await getServerState();
+        };
+
+        executeAsyncFunc();
+    }, []);
+
+    useEffect(() => {
+        const executeAsyncFunc = async () => {
             await syncWithServer();
         };
 
-        firstRun();
+        if (isSyncInProgress || !isFetchInProgress) {
+            executeAsyncFunc();
+        }
+    }, [isSyncInProgress, isFetchInProgress]);
 
-        // eslint-disable-next-line no-console
-        console.log('event source useEffect is running...');
-
+    useEffect(() => {
         if (eventSource.current) {
             eventSource.current.close();
         }
@@ -107,13 +168,12 @@ function TimeLeftUntilNextFetchSetting() {
             const isSyncInProgressNew = data.is_sync_in_progress;
             const isFetchInProgressNew = data.is_fetch_in_progress;
 
-            // eslint-disable-next-line no-console
-            console.log('Status change: ', data);
-
+            // eslint-disable-next-line max-nested-callbacks
             setIsSyncInProgress((previousValue) => {
                 return previousValue === isSyncInProgressNew ? previousValue : isSyncInProgressNew;
             });
 
+            // eslint-disable-next-line max-nested-callbacks
             setIsFetchInProgress((previousValue) => {
                 return previousValue === isFetchInProgressNew ? previousValue : isFetchInProgressNew;
             });
@@ -125,6 +185,7 @@ function TimeLeftUntilNextFetchSetting() {
             eventSource.current?.close();
 
             interval = setInterval(async () => {
+                // eslint-disable-next-line max-nested-callbacks
                 setReRunEvent((previousValue) => {
                     return !previousValue;
                 });
@@ -135,10 +196,7 @@ function TimeLeftUntilNextFetchSetting() {
     }, [reRunEvent, eventSource]);
 
     useEffect(() => {
-        // eslint-disable-next-line no-console
-        console.log('LastFetchAt: ', lastFetchAt);
-
-        const remainingTime = (lastFetchAt + fetchInterval) - new Date().getTime();
+        const remainingTime = (lastFetchedAt + fetchInterval) - new Date().getTime();
 
         let firstCountDown = remainingTime;
 
@@ -147,15 +205,12 @@ function TimeLeftUntilNextFetchSetting() {
         }
 
         setCountDown(firstCountDown);
-    }, [lastFetchAt]);
+    }, [lastFetchedAt, fetchInterval]);
 
     useEffect(() => {
         const hours = Math.floor((countDown % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const minutes = Math.floor((countDown % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((countDown % (1000 * 60)) / 1000);
-
-        // eslint-disable-next-line no-console
-        console.log(hours, minutes, seconds);
 
         if (countDown >= 0) {
             setTimeLeft({
@@ -168,22 +223,24 @@ function TimeLeftUntilNextFetchSetting() {
         const interval = setInterval(async () => {
             if (countDown < 1000) { // since we are counting down every second
                 clearInterval(interval);
-                if (isSyncInProgress) {
-                    await syncWithServer();
-                }
             }
 
-            const remainingTime = (lastFetchAt + fetchInterval) - new Date().getTime();
+            const remainingTime = (lastFetchedAt + fetchInterval) - new Date().getTime();
 
-            if (remainingTime < 0) {
-                clearInterval(interval);
-            } else {
-                setCountDown(remainingTime);
-            }
+            // if (remainingTime < 0) {
+            //     clearInterval(interval);
+            // } else {
+            //     setCountDown(remainingTime);
+            // }
+
+            // if (remainingTime >= 0) {
+            setCountDown(remainingTime);
+
+            // }
         }, 1000);
 
         return () => clearInterval(interval);
-    }, [countDown, lastFetchAt, fetchInterval]);
+    }, [countDown]);
 
     useEffect(() => {
         if (loading) {
@@ -210,46 +267,48 @@ function TimeLeftUntilNextFetchSetting() {
                     <p> {'Loading ...'} </p>
                 ) : (
                     <Fragment>
-                        {isFetchInProgress ? (
-                            <p>{'Fetching in progress ...'}</p>
-                        ) : (isSyncInProgress ? (
+                        {!isSyncInProgress ? (
+                            <p> {'Sync not running'} </p>
+                        ) : (isFetchInProgress ? (
                             <Fragment>
-                                {lastFetchAt <= 0 ? (
-                                    <p> {'Starting sync for the first time ...'} </p>
+                                {lastFetchedAt <= 0 ? (
+                                    <p> {'Fetching messages for the first time ...'} </p>
                                 ) : (
-                                    <div className='ss-time-left-counter'>
-                                        <div className='ss-time-left-counter__item'>
-                                            <span className='ss-time-left-counter__item__number'>
-                                                { timeLeft.hours }
-                                            </span>
-                                            <span className='ss-time-left-counter__item__label'>
-                                                { 'Hours' }
-                                            </span>
-                                        </div>
-                                        <span className='ss-time-left-counter__divider'>{ ':' }</span>
-                                        <div className='ss-time-left-counter__item'>
-                                            <span className='ss-time-left-counter__item__number'>
-                                                { timeLeft.minutes }
-                                            </span>
-                                            <span className='ss-time-left-counter__item__label'>
-                                                { 'Minutes' }
-                                            </span>
-                                        </div>
-                                        <span className='ss-time-left-counter__divider'>{ ':' }</span>
-                                        <div className='ss-time-left-counter__item'>
-                                            <span className='ss-time-left-counter__item__number'>
-                                                { timeLeft.seconds }
-                                            </span>
-                                            <span className='ss-time-left-counter__item__label'>
-                                                { 'Seconds' }
-                                            </span>
-                                        </div>
-                                    </div>
+                                    <p>{'Fetching messages in progress ...'}</p>
                                 )}
                             </Fragment>
+                        ) : (countDown < 1000 ? (
+                            <p> {'Fetching time has passed (check server for possible issues)'} </p>
                         ) : (
-                            <p> {'Sync not running'} </p>
-                        ))}
+                            <div className='ss-time-left-counter'>
+                                <div className='ss-time-left-counter__item'>
+                                    <span className='ss-time-left-counter__item__number'>
+                                        { timeLeft.hours }
+                                    </span>
+                                    <span className='ss-time-left-counter__item__label'>
+                                        { 'Hours' }
+                                    </span>
+                                </div>
+                                <span className='ss-time-left-counter__divider'>{ ':' }</span>
+                                <div className='ss-time-left-counter__item'>
+                                    <span className='ss-time-left-counter__item__number'>
+                                        { timeLeft.minutes }
+                                    </span>
+                                    <span className='ss-time-left-counter__item__label'>
+                                        { 'Minutes' }
+                                    </span>
+                                </div>
+                                <span className='ss-time-left-counter__divider'>{ ':' }</span>
+                                <div className='ss-time-left-counter__item'>
+                                    <span className='ss-time-left-counter__item__number'>
+                                        { timeLeft.seconds }
+                                    </span>
+                                    <span className='ss-time-left-counter__item__label'>
+                                        { 'Seconds' }
+                                    </span>
+                                </div>
+                            </div>
+                        )))}
                     </Fragment>
                 )}
             </Fragment>
