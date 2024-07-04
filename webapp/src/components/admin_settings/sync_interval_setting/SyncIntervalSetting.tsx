@@ -53,9 +53,6 @@ function SyncIntervalSetting() {
                 minute: Math.floor((jsonRes % (60 * 60)) / (60)),
             };
 
-            // eslint-disable-next-line no-console
-            console.log('jsonRes', fetchedInterval);
-
             setSyncInterval(fetchedInterval);
         } else {
             const jsonErr = await response?.json();
@@ -168,9 +165,6 @@ function SyncIntervalSetting() {
 
         try {
             const urlWithParams = `${apiURL}/sync/fetch_interval?${queryString}`;
-
-            // eslint-disable-next-line no-console
-            console.log('url with params', urlWithParams);
 
             response = await fetch(urlWithParams, postOptions);
         } catch (err: any) {

@@ -98,9 +98,6 @@ function UploadSlackExportFileSetting() {
         if (response?.ok) {
             const resJson = await response.json();
 
-            // eslint-disable-next-line no-console
-            console.log('resJson', resJson);
-
             const unfilteredChnls = resJson.map((channel: any) => {
                 if (!Object.prototype.hasOwnProperty.call(channel, 'checked')) {
                     channel.checked = false;
@@ -330,9 +327,6 @@ function UploadSlackExportFileSetting() {
             };
         }
 
-        // eslint-disable-next-line no-console
-        console.log('postObj', postObj);
-
         const postOptions: RequestInit = {
             method: 'POST',
             headers: {
@@ -368,8 +362,6 @@ function UploadSlackExportFileSetting() {
 
             eventSource.addEventListener('onProgress', (event) => {
                 const data = JSON.parse(event.data);
-                // eslint-disable-next-line no-console
-                console.log('Storing slack data... ', data);
 
                 const channelInProgressId = Object.keys(data)[0];
 
@@ -388,16 +380,9 @@ function UploadSlackExportFileSetting() {
                 });
 
                 setUnfilteredChannels([...channelInProgress, ...remainingChannels]);
-
-                // eslint-disable-next-line no-console
-                // console.log('Current channel: ', channelInProgress);
             });
 
             eventSource.addEventListener('onDone', (event) => {
-                const data = JSON.parse(event.data);
-                // eslint-disable-next-line no-console
-                console.log('Finished storing slack data: ', data);
-
                 setUnfilteredChannels([]);
                 setIsUploaded(true);
                 setShowProgress(false);
