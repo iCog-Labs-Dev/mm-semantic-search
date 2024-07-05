@@ -223,6 +223,11 @@ function TimeLeftUntilNextFetchSetting() {
         const interval = setInterval(async () => {
             if (countDown < 1000) { // since we are counting down every second
                 clearInterval(interval);
+
+                // handle edge case where fetch_interval is changed while sync was in progress
+                if (isSyncInProgress || !isFetchInProgress) {
+                    await syncWithServer();
+                }
             }
 
             const remainingTime = (lastFetchedAt + fetchInterval) - new Date().getTime();
@@ -278,7 +283,7 @@ function TimeLeftUntilNextFetchSetting() {
                                 )}
                             </Fragment>
                         ) : (countDown < 1000 ? (
-                            <p> {'Fetching time has passed (check server for possible issues)'} </p>
+                            <p> {'Fetching time has passed. There may have been change in "fetch interval" value while sync was in progress. (check server for possible issues)'} </p>
                         ) : (
                             <div className='ss-time-left-counter'>
                                 <div className='ss-time-left-counter__item'>
