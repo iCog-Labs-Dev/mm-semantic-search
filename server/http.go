@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-
+	"github.com/mattermost/mattermost/server/public/model"
 	"github.com/mattermost/mattermost/server/public/plugin"
 )
 
@@ -22,14 +22,15 @@ func (p *Plugin) initializeAPI() {
 	router := mux.NewRouter()
 
 	router.HandleFunc("/search", p.handleSearch)
+	router.Use(p.requireAuth)
 
 	syncRouter := router.PathPrefix("/sync").Subrouter()
-	syncRouter.Use(p.requireAuth)
+	syncRouter.Use(p.requireAdmin)
 	syncRouter.HandleFunc("/start", p.handleStartSync)
 	syncRouter.HandleFunc("/stop", p.handleStopSync)
 
 	slackRouter := router.PathPrefix("/slack").Subrouter()
-	slackRouter.Use(p.requireAuth)
+	slackRouter.Use(p.requireAdmin)
 	slackRouter.HandleFunc("/upload_zip", p.handleUploadSlackZip)
 	slackRouter.HandleFunc("/store_data", p.handleUploadStoreSlackData)
 
@@ -48,25 +49,27 @@ func (p *Plugin) initializeAPI() {
 // Authentication handler
 func (p *Plugin) requireAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// if !p.API.HasPermissionTo(r, plugin.ActivatePermission) {
-		// 	http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		// 	return
-		// }
+		// check to see if the user is an authenticated user
+		if !(r.Header.Get("Mattermost-User-ID") != "") {
+			http.Error(w, "UnAuthorized: Allowed only for mattermost user", http.StatusUnauthorized)
+			return
+		}
 
 		next.ServeHTTP(w, r)
 	})
 }
 
-// func (p *Plugin) requireAdmin(next http.Handler) http.Handler {
-// 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-// 		if !p.API.HasPermissionTo(r, plugin.AdminPermission) {
-// 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-// 			return
-// 		}
+func (p *Plugin) requireAdmin(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		userId := r.Header.Get("Mattermost-User-ID")
+		if !p.API.HasPermissionTo(userId, model.PermissionManageSystem) {
+			http.Error(w, "UnAuthorized: Allowed only for admin", http.StatusUnauthorized)
+			return
+		}
 
-// 		next.ServeHTTP(w, r)
-// 	})
-// }
+		next.ServeHTTP(w, r)
+	})
+}
 
 // Search handler
 
