@@ -1,29 +1,18 @@
 /* eslint-disable react/jsx-closing-bracket-location */
-import PropTypes from 'prop-types'
-import React, { Fragment, useEffect, useRef, useState } from 'react'
+import PropTypes from 'prop-types';
+import React, {Fragment, useEffect, useRef, useState} from 'react';
 
-import Home from './home/Home'
-import Loader from './loader/Loader'
-import Result from './result/Result'
+import Home from './home/Home';
+import Loader from './loader/Loader';
+import Result from './result/Result';
 
-import './rightHandSidebarStyle.css'
+import './rightHandSidebarStyle.css';
 
-const RHSView = ({user, patchUser}) => {
-    // eslint-disable-next-line no-process-env
-    const apiURL = 'http://localhost:4501';
+const RHSView = ({pluginServerRoute}) => {
     const [loading, setLoading] = useState(false);
     const inputRef = useRef(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [payload, setPayload] = useState();
-
-    // const updateFirstName = () => {
-    //     const patchedUser = {
-    //         id: user.id,
-    //         first_name: 'Tollana',
-    //     };
-
-    //     patchUser(patchedUser); // here we use the action
-    // };
 
     const handleSearchQuery = async (e) => {
         e.preventDefault();
@@ -46,29 +35,26 @@ const RHSView = ({user, patchUser}) => {
             return;
         }
 
-        const currentUser = user.id;
-
-        // eslint-disable-next-line no-console
-        console.log('User-id: ', currentUser);
-        console.log('User: ', user);
-
         setLoading(true);
 
         const params = new URLSearchParams({
             query: searchQuery,
         });
 
-        const api = `${apiURL}/search?${params.toString()}`;
+        const api = `${pluginServerRoute}/search?${params.toString()}`;
 
         fetch(api, {
-            method: 'POST',
+            method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
             },
+
+            // credentials: 'include',
         }).
             then((res) => res.json()).
             then((res) => {
                 const responsePayload = {text: res.llm, context: res.context};
+                // eslint-disable-next-line no-console
                 console.log(responsePayload);
                 setPayload(responsePayload);
             }).
@@ -84,7 +70,7 @@ const RHSView = ({user, patchUser}) => {
             finally(() => {
                 setLoading(false);
             });
-    }, [searchQuery, user.id]);
+    }, [searchQuery]);
 
     return (
         <div className='ss-root'>
@@ -126,8 +112,7 @@ const RHSView = ({user, patchUser}) => {
 };
 
 RHSView.propTypes = {
-    user: PropTypes.object.isRequired,
-    patchUser: PropTypes.func.isRequired, // here we define the action as a prop
+    pluginServerRoute: PropTypes.string.isRequired,
 };
 
 export default RHSView;

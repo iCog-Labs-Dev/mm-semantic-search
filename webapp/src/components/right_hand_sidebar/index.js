@@ -1,20 +1,18 @@
-import { connect } from 'react-redux'
-import { bindActionCreators } from 'redux'
+import {connect} from 'react-redux';
+import {bindActionCreators} from 'redux';
 
-import { patchUser } from 'mattermost-redux/actions/users.js'; // importing the action
+import {getPluginServerRoute} from '../../selectors';
 
-import RHSView from './rhs_view'
+import RHSView from './rhs_view';
 
 const mapStateToProps = (state) => {
-    const currentUserId = state.entities.users.currentUserId;
+    const pluginServerRoute = getPluginServerRoute(state);
 
     return {
-        user: state.entities.users.profiles[currentUserId],
+        pluginServerRoute,
     };
 };
 
-const mapDispatchToProps = (dispatch) => bindActionCreators({
-    patchUser, // passing the action as a prop
-}, dispatch);
+const mapDispatchToProps = (dispatch) => bindActionCreators({}, dispatch);
 
 export default connect(mapStateToProps, mapDispatchToProps)(RHSView);

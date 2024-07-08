@@ -1,7 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react'
-import ReactMarkdown from 'react-markdown'
+import React, {useEffect, useRef, useState} from 'react';
+import ReactMarkdown from 'react-markdown';
 
-import './resultStyle.css'
+import './resultStyle.css';
 
 function Result({item} : any) {
     // eslint-disable-next-line no-process-env
@@ -45,8 +45,6 @@ function Result({item} : any) {
     const getAvatarUrl = async (user_id: string) => {
         const api = apiUrl + `/api/v4/users/${user_id}/image`;
         const credentialsValue: 'omit' | 'same-origin' | 'include' = 'include';
-
-        console.log('api: ', api);
 
         const fetchOptions: RequestInit = {
             method: 'GET',
@@ -101,7 +99,7 @@ function Result({item} : any) {
                             <div
                                 className='ss-response-context'
                                 style={{borderColor: source === 'sl' ? '#4A154Baa' : '', borderWidth: source === 'sl' ? '2px' : ''}}
-                                key={time + user_id}
+                                key={message_link}
                             >
                                 <div className='ss-rc-top'>
                                     <div className='ss-rc-user'>
