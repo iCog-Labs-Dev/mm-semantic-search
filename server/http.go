@@ -1,7 +1,9 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -50,8 +52,10 @@ func (p *Plugin) initializeAPI() {
 func (p *Plugin) requireAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// check to see if the user is an authenticated user
-		if !(r.Header.Get("Mattermost-User-ID") != "") {
+		if r.Header.Get("Mattermost-User-ID") == "" {
 			http.Error(w, "UnAuthorized: Allowed only for mattermost user", http.StatusUnauthorized)
+			// headerJson, _ := json.Marshal(r.Header)
+			// http.Error(w, string(headerJson), http.StatusUnauthorized)
 			return
 		}
 
@@ -74,7 +78,29 @@ func (p *Plugin) requireAdmin(next http.Handler) http.Handler {
 // Search handler
 
 func (p *Plugin) handleSearch(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "Test")
+	w.Header().Set("Content-Type", "application/json")
+
+	hasQuery := r.URL.Query().Has("query")
+	if !hasQuery {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	query := r.URL.Query().Get("query")
+
+	userId := r.Header.Get("Mattermost-User-ID")
+
+	searchResponse := Search(query, userId)
+
+	searchResponseJSON, err := json.Marshal(searchResponse)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	io.Writer.Write(w, searchResponseJSON)
+
+	responseJSON, _ := json.MarshalIndent(searchResponse, "->", "  ")
+	fmt.Println(string(responseJSON))
 }
 
 // Sync handlers
