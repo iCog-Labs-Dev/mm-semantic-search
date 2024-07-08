@@ -4,7 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
+	"os"
+	"path/filepath"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/mattermost/mattermost/server/public/model"
@@ -116,7 +120,66 @@ func (p *Plugin) handleStopSync(w http.ResponseWriter, r *http.Request) {
 // Slack handlers
 
 func (p *Plugin) handleUploadSlackZip(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "Upload Slack Zip")
+	if r.Method != "POST" {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	log.Printf("Upload started ...")
+
+	w.Header().Set("Content-Type", "application/json")
+	// w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	// The argument to FormFile must match the name attribute of the file input on the frontend
+	file, fileHeader, err := r.FormFile("file")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+
+	// Create a new file in the uploads directory
+	dst, err := os.Create(fmt.Sprintf("./%d%s", time.Now().Unix(), filepath.Ext(fileHeader.Filename)))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer dst.Close()
+
+	// Copy the uploaded file to the filesystem at the specified destination
+	_, copyError := io.Copy(dst, file)
+	if copyError != nil {
+		http.Error(w, copyError.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	extractError := p.slackClient.extractDetailsFromZip(dst.Name())
+	if extractError != nil {
+		http.Error(w, extractError.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// read extracted data from zip and store it p.slackClient.Channels
+	readError := p.slackClient.readExtractedData()
+	if readError != nil {
+		http.Error(w, readError.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// delete the zip file after extraction
+	deleteError := os.Remove(dst.Name())
+	if deleteError != nil {
+		http.Error(w, deleteError.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	channelJson, jsonError := json.Marshal(p.slackClient.Channels)
+	if jsonError != nil {
+		http.Error(w, jsonError.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	io.Writer.Write(w, channelJson)
 }
 
 func (p *Plugin) handleUploadStoreSlackData(w http.ResponseWriter, r *http.Request) {

@@ -12,6 +12,8 @@ import (
 type Plugin struct {
 	plugin.MattermostPlugin
 
+	slackClient *Slack
+
 	// configurationLock synchronizes access to the configuration.
 	configurationLock sync.RWMutex
 
