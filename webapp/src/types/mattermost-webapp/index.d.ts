@@ -7,5 +7,7 @@ export interface PluginRegistry {
 
     registerAdminConsoleCustomSetting(key: string, component: React.ElementType, options?: {showTitle: boolean})
 
+    registerWebSocketEventHandler(event: string, handler: (message: any) => void)
+
     // Add more if needed from https://developers.mattermost.com/extend/plugins/webapp/reference
 }

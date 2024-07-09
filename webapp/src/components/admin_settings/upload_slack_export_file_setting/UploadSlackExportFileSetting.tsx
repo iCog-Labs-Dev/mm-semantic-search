@@ -1,8 +1,17 @@
+import PropTypes from 'prop-types';
 import React, {Fragment, useEffect, useState} from 'react';
 
 import './uploadSlackExportFileSetting.css';
 
-function UploadSlackExportFileSetting() {
+interface UploadSlackExportFileSettingProps {
+    pluginServerRoute: string; // Adjust the type as necessary
+    isSlackDataProgressDone: boolean;
+
+    // slackDataProgress: {[key: string]: number};
+    slackDataProgress: object;
+}
+
+const UploadSlackExportFileSetting: React.FC<UploadSlackExportFileSettingProps> = ({pluginServerRoute, slackDataProgress, isSlackDataProgressDone}) => {
     type Channel = {
         created: number;
         id: string;
@@ -21,9 +30,6 @@ function UploadSlackExportFileSetting() {
         end_date: string;
     };
 
-    // eslint-disable-next-line no-process-env
-    // const apiURL = process.env.MM_PLUGIN_API_URL;
-    const apiURL = 'http://localhost:4500';
     const [loading, setLoading] = useState(false);
     const [hasError, setHasError] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
@@ -82,7 +88,7 @@ function UploadSlackExportFileSetting() {
         let response;
 
         try {
-            const api = `${apiURL}/slack/upload_zip`;
+            const api = `${pluginServerRoute}/slack/upload_zip`;
 
             response = await fetch(api!, fetchOptions);
         } catch (err: any) {
@@ -342,7 +348,9 @@ function UploadSlackExportFileSetting() {
         let response;
 
         try {
-            const api = `${apiURL}/slack/store_data`;
+            const api = `${pluginServerRoute}/slack/store_data`;
+
+            setShowProgress(true);
 
             response = await fetch(api!, postOptions);
         } catch (err: any) {
@@ -352,61 +360,46 @@ function UploadSlackExportFileSetting() {
             setHasError(true);
             setErrorMessage(err.message);
         } finally {
+            setShowProgress(false);
             setLoading(false);
         }
-
-        if (response?.ok) {
-            setShowProgress(true);
-            const api = `${apiURL}/slack/store_data`;
-            const eventSource = new EventSource(api);
-
-            eventSource.addEventListener('onProgress', (event) => {
-                const data = JSON.parse(event.data);
-
-                const channelInProgressId = Object.keys(data)[0];
-
-                const currentProgress = data[channelInProgressId];
-
-                const channelInProgress = unfilteredChannels.filter((channel) => {
-                    return channel.id === channelInProgressId;
-                });
-
-                if (channelInProgress.length > 0) {
-                    channelInProgress[0].progress = currentProgress;
-                }
-
-                const remainingChannels = unfilteredChannels.filter((channel) => {
-                    return channel.id !== channelInProgressId;
-                });
-
-                setUnfilteredChannels([...channelInProgress, ...remainingChannels]);
-            });
-
-            eventSource.addEventListener('onDone', (event) => {
-                setUnfilteredChannels([]);
-                setIsUploaded(true);
-                setShowProgress(false);
-
-                eventSource.close();
-            });
-
-            eventSource.onerror = (error) => {
-                // eslint-disable-next-line no-console
-                console.error('Storing slack SSE error:', error);
-
-                setUnfilteredChannels([]);
-                setIsUploaded(true);
-                setShowProgress(false);
-
-                eventSource.close();
-            };
-        } else {
-            const jsonErr = await response?.json();
-
-            setHasError(true);
-            setErrorMessage(jsonErr.message);
-        }
     };
+
+    useEffect(() => {
+        // eslint-disable-next-line no-console
+        console.log('Slack progress done: ', isSlackDataProgressDone);
+
+        if (isSlackDataProgressDone) {
+            setUnfilteredChannels([]);
+            setIsUploaded(true);
+            setShowProgress(false);
+        }
+    }, [isSlackDataProgressDone]);
+
+    useEffect(() => {
+        // eslint-disable-next-line no-console
+        console.log('Slack progress: ', slackDataProgress);
+
+        if (slackDataProgress) {
+            const channelInProgressId = Object.keys(slackDataProgress)[0];
+
+            const currentProgress = slackDataProgress[channelInProgressId];
+
+            const channelInProgress = unfilteredChannels.filter((channel) => {
+                return channel.id === channelInProgressId;
+            });
+
+            if (channelInProgress.length > 0) {
+                channelInProgress[0].progress = currentProgress;
+            }
+
+            const remainingChannels = unfilteredChannels.filter((channel) => {
+                return channel.id !== channelInProgressId;
+            });
+
+            setUnfilteredChannels([...channelInProgress, ...remainingChannels]);
+        }
+    }, [slackDataProgress]);
 
     return (
         <Fragment>
@@ -531,6 +524,12 @@ function UploadSlackExportFileSetting() {
             </p>
         </Fragment>
     );
-}
+};
+
+UploadSlackExportFileSetting.propTypes = {
+    pluginServerRoute: PropTypes.string.isRequired,
+    slackDataProgress: PropTypes.object.isRequired,
+    isSlackDataProgressDone: PropTypes.bool.isRequired,
+};
 
 export default UploadSlackExportFileSetting;

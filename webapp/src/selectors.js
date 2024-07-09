@@ -2,6 +2,8 @@ import {getConfig} from 'mattermost-redux/selectors/entities/general';
 
 import PluginId from './plugin_id';
 
+const getPluginState = (state) => state['plugins-' + PluginId] || {};
+
 export const getPluginServerRoute = (state) => {
     const config = getConfig(state);
 
@@ -16,3 +18,6 @@ export const getPluginServerRoute = (state) => {
 
     return basePath + '/plugins/' + PluginId;
 };
+
+export const getSlackDataProgress = (state) => getPluginState(state).slackDataStoreProgress;
+export const isSlackDataStoringDone = (state) => getPluginState(state).slackDataStoreDone;
