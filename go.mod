@@ -1,9 +1,10 @@
-module github.com/mm-semantic-search/semantic-search-plugin
+module github.com/iCog-Labs-Dev/mm-semantic-search
 
 go 1.21
 
 require (
 	github.com/amikos-tech/chroma-go v0.1.3
+	github.com/boltdb/bolt v1.3.1
 	github.com/gorilla/mux v1.8.1
 	github.com/mattermost/mattermost/server/public v0.0.14
 	github.com/pkg/errors v0.9.1
