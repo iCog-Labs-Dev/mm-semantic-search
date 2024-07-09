@@ -4,7 +4,7 @@ import React, {Fragment, useEffect, useState} from 'react';
 import './uploadSlackExportFileSetting.css';
 
 interface UploadSlackExportFileSettingProps {
-    pluginServerRoute: string; // Adjust the type as necessary
+    pluginServerRoute: string;
     isSlackDataProgressDone: boolean;
 
     // slackDataProgress: {[key: string]: number};
@@ -345,14 +345,12 @@ const UploadSlackExportFileSetting: React.FC<UploadSlackExportFileSettingProps> 
 
         setLoading(true);
 
-        let response;
-
         try {
             const api = `${pluginServerRoute}/slack/store_data`;
 
             setShowProgress(true);
 
-            response = await fetch(api!, postOptions);
+            await fetch(api!, postOptions);
         } catch (err: any) {
             // eslint-disable-next-line no-console
             console.warn('Error', err);

@@ -99,7 +99,7 @@ function Result({item} : any) {
                             <div
                                 className='ss-response-context'
                                 style={{borderColor: source === 'sl' ? '#4A154Baa' : '', borderWidth: source === 'sl' ? '2px' : ''}}
-                                key={message_link}
+                                key={`${time} ${user_id}`}
                             >
                                 <div className='ss-rc-top'>
                                     <div className='ss-rc-user'>
