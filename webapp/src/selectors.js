@@ -21,3 +21,7 @@ export const getPluginServerRoute = (state) => {
 
 export const getSlackDataProgress = (state) => getPluginState(state).slackDataStoreProgress;
 export const isSlackDataStoringDone = (state) => getPluginState(state).slackDataStoreDone;
+export const getSyncProgress = (state) => getPluginState(state).syncProgress;
+export const isSyncProgressDone = (state) => getPluginState(state).syncDone;
+export const isSyncProgressStopped = (state) => getPluginState(state).syncStop;
+export const getSyncStatus = (state) => getPluginState(state).syncStatus;
