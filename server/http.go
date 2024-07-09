@@ -30,31 +30,22 @@ func (p *Plugin) initializeAPI() {
 	router := mux.NewRouter()
 
 	router.HandleFunc("/search", p.handleSearch)
-	router.Use(p.requireAuth)
+	// router.Use(p.requireAuth)
 
 	syncRouter := router.PathPrefix("/sync").Subrouter()
-	syncRouter.Use(p.requireAdmin)
-	syncRouter.HandleFunc("/start", p.handleStartSync)
-	syncRouter.HandleFunc("/stop", p.handleStopSync)
+	// syncRouter.Use(p.requireAdmin)
+	syncRouter.Handle("/start", p.mmSyncBroker)
+	syncRouter.Handle("/stop", p.mmSyncBroker)
 
 	slackRouter := router.PathPrefix("/slack").Subrouter()
-	slackRouter.Use(p.requireAdmin)
+	// slackRouter.Use(p.requireAdmin)
 	slackRouter.HandleFunc("/upload_zip", p.handleUploadSlackZip)
 	slackRouter.HandleFunc("/store_data", p.handleUploadStoreSlackData)
 
 	p.router = router
 }
 
-// TODO: Add handlers for the following endpoints:
-//
-// * /search
-// * /sync/start
-// * /sync/stop
-// * /slack/upload_zip
-// * /slack/store_data
-
-// TODO: Fix requireAuth method
-// Authentication handler
+// TODO: Fix requireAuth method Authentication handler
 func (p *Plugin) requireAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// check to see if the user is an authenticated user
@@ -111,13 +102,13 @@ func (p *Plugin) handleSearch(w http.ResponseWriter, r *http.Request) {
 
 // Sync handlers
 
-func (p *Plugin) handleStartSync(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "Start Sync")
-}
+// func (p *Plugin) handleStartSync(w http.ResponseWriter, r *http.Request) {
+// 	fmt.Fprint(w, "Start Sync")
+// }
 
-func (p *Plugin) handleStopSync(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "Stop Sync")
-}
+// func (p *Plugin) handleStopSync(w http.ResponseWriter, r *http.Request) {
+// 	fmt.Fprint(w, "Stop Sync")
+// }
 
 // Slack handlers
 
@@ -373,6 +364,7 @@ func (p *Plugin) handleUploadStoreSlackData(w http.ResponseWriter, r *http.Reque
 				},
 			}, &model.WebsocketBroadcast{})
 
+			// FIX: remove this after testing in production
 			time.Sleep(1 * time.Second)
 		}
 	}

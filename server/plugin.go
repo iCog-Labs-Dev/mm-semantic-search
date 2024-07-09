@@ -12,6 +12,8 @@ import (
 type Plugin struct {
 	plugin.MattermostPlugin
 
+	mmSyncBroker *Broker
+
 	slackClient *Slack
 
 	// configurationLock synchronizes access to the configuration.
