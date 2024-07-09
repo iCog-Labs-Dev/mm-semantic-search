@@ -150,7 +150,7 @@ const ToggleSyncSetting: React.FC<ToggleSyncSettingProps> = ({pluginServerRoute,
         setLoading(true);
 
         try {
-            const api = `${pluginServerRoute}/sync/start`;
+            const api = `${pluginServerRoute}/sync/stop`;
 
             await fetch(api!, getOptions);
         } catch (err: any) {
