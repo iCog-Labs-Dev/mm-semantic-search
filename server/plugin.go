@@ -12,6 +12,8 @@ import (
 type Plugin struct {
 	plugin.MattermostPlugin
 
+	mmSync *Sync
+
 	mmSyncBroker *Broker
 
 	slackClient *Slack
