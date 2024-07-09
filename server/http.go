@@ -36,6 +36,11 @@ func (p *Plugin) initializeAPI() {
 	// syncRouter.Use(p.requireAdmin)
 	syncRouter.Handle("/start", p.mmSyncBroker)
 	syncRouter.Handle("/stop", p.mmSyncBroker)
+	syncRouter.HandleFunc("/is_fetch_in_progress", p.handleIsFetchInProgress)
+	syncRouter.HandleFunc("/is_sync_in_progress", p.handleIsSyncInProgress)
+	syncRouter.HandleFunc("/fetch_interval", p.handleFetchInterval)
+	syncRouter.HandleFunc("/last_fetched_at", p.handleLastFetchedAt)
+	syncRouter.HandleFunc("/reset", p.handleReset)
 
 	slackRouter := router.PathPrefix("/slack").Subrouter()
 	// slackRouter.Use(p.requireAdmin)
@@ -102,13 +107,114 @@ func (p *Plugin) handleSearch(w http.ResponseWriter, r *http.Request) {
 
 // Sync handlers
 
-// func (p *Plugin) handleStartSync(w http.ResponseWriter, r *http.Request) {
-// 	fmt.Fprint(w, "Start Sync")
-// }
+func (p *Plugin) handleIsFetchInProgress(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
 
-// func (p *Plugin) handleStopSync(w http.ResponseWriter, r *http.Request) {
-// 	fmt.Fprint(w, "Stop Sync")
-// }
+	isFetchInProgress, err := p.mmSync.GetIsFetchInProgress()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	io.Writer.Write(w, []byte(strconv.FormatBool(isFetchInProgress)))
+}
+
+func (p *Plugin) handleIsSyncInProgress(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	isSyncInProgress, err := p.mmSync.GetIsSyncInProgress()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	io.Writer.Write(w, []byte(strconv.FormatBool(isSyncInProgress)))
+}
+
+func (p *Plugin) handleFetchInterval(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" && r.Method != "GET" {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	if r.Method == "GET" {
+		fetchInterval, err := p.mmSync.GetFetchInterval()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		io.Writer.Write(w, []byte(strconv.Itoa(fetchInterval)))
+	}
+
+	if r.Method == "POST" {
+		hasFetchInterval := r.URL.Query().Has("fetch_interval")
+		if !hasFetchInterval {
+			http.Error(w, "fetch_interval query field not found", http.StatusBadRequest)
+			return
+		}
+
+		fetchInterval := r.URL.Query().Get("fetch_interval")
+		if fetchInterval == "" {
+			http.Error(w, "fetch_interval query field is empty", http.StatusBadRequest)
+			return
+		}
+
+		fetchIntervalInt, parseError := strconv.Atoi(fetchInterval)
+		if parseError != nil {
+			http.Error(w, parseError.Error(), http.StatusBadRequest)
+			return
+		}
+
+		fetchDuration := time.Duration(fetchIntervalInt) * time.Second
+
+		err := p.mmSync.UpdateFetchInterval(fetchDuration)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		io.Writer.Write(w, []byte("Fetch interval updated successfully"))
+	}
+}
+
+func (p *Plugin) handleLastFetchedAt(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	if r.Method == "GET" {
+		lastFetchedAt, err := p.mmSync.GetLastFetchedAt()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		io.Writer.Write(w, []byte(strconv.Itoa(int(lastFetchedAt.UnixMilli()))))
+	}
+}
+
+func (p *Plugin) handleReset(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "DELETE" {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	isReset, err := ResetVectorStore()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	io.Writer.Write(w, []byte(fmt.Sprintf("Vector store reset successfully: %v", isReset)))
+}
 
 // Slack handlers
 
