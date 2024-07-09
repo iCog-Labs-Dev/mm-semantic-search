@@ -1,15 +1,16 @@
 /* eslint-disable no-negated-condition */
 /* eslint-disable no-nested-ternary */
+import PropTypes from 'prop-types';
 import React, {Fragment, useCallback, useEffect, useRef, useState} from 'react';
 
 import './timeLeftUntilNextFetchSettingStyle.css';
 
-function TimeLeftUntilNextFetchSetting() {
-    //eslint-disable-next-line no-process-env
-    // const apiURL = process.env.MM_PLUGIN_API_URL;
-    const apiURL = 'http://localhost:3333';
-    const RETRYTIMEINSECONDS = 10 * 1000;
+interface TimeLeftUntilNextFetchSettingProps {
+    pluginServerRoute: string;
+    syncStatus: object;
+}
 
+const TimeLeftUntilNextFetchSetting: React.FC<TimeLeftUntilNextFetchSettingProps> = ({pluginServerRoute, syncStatus}) => {
     const [loading, setLoading] = useState(false);
     const [hasError, setHasError] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
@@ -24,9 +25,6 @@ function TimeLeftUntilNextFetchSetting() {
     const [isFetchInProgress, setIsFetchInProgress] = useState<boolean>();
     const [isSyncInProgress, setIsSyncInProgress] = useState<boolean>();
     const [countDown, setCountDown] = useState(0);
-    const [reRunEvent, setReRunEvent] = useState(false);
-
-    const eventSource = useRef<EventSource>();
 
     const getServerState = useCallback(async () => {
         const fetchOptions: RequestInit = {
@@ -44,8 +42,8 @@ function TimeLeftUntilNextFetchSetting() {
         let isFetchInProgressRes;
 
         try {
-            const isSyncInProgressAPI = `${apiURL}/sync/is_sync_in_progress`;
-            const isFetchInProgressAPI = `${apiURL}/sync/is_fetch_in_progress`;
+            const isSyncInProgressAPI = `${pluginServerRoute}/sync/is_sync_in_progress`;
+            const isFetchInProgressAPI = `${pluginServerRoute}/sync/is_fetch_in_progress`;
 
             isSyncInProgressRes = await fetch(isSyncInProgressAPI!, fetchOptions);
             isFetchInProgressRes = await fetch(isFetchInProgressAPI!, fetchOptions);
@@ -79,7 +77,7 @@ function TimeLeftUntilNextFetchSetting() {
             setHasError(true);
             setErrorMessage(jsonErr.message);
         }
-    }, [apiURL]);
+    }, [pluginServerRoute]);
 
     const syncWithServer = useCallback(async () => {
         const fetchOptions: RequestInit = {
@@ -97,8 +95,8 @@ function TimeLeftUntilNextFetchSetting() {
         let fetchIntervalRes;
 
         try {
-            const lastFetchedAtAPI = `${apiURL}/sync/last_fetched_at`;
-            const fetchIntervalAPI = `${apiURL}/sync/fetch_interval`;
+            const lastFetchedAtAPI = `${pluginServerRoute}/sync/last_fetched_at`;
+            const fetchIntervalAPI = `${pluginServerRoute}/sync/fetch_interval`;
 
             lastFetchedAtRes = await fetch(lastFetchedAtAPI!, fetchOptions);
             fetchIntervalRes = await fetch(fetchIntervalAPI!, fetchOptions);
@@ -133,7 +131,7 @@ function TimeLeftUntilNextFetchSetting() {
             setHasError(true);
             setErrorMessage(jsonErr.message);
         }
-    }, [apiURL]);
+    }, [pluginServerRoute]);
 
     useEffect(() => {
         const executeAsyncFunc = async () => {
@@ -154,46 +152,17 @@ function TimeLeftUntilNextFetchSetting() {
     }, [isSyncInProgress, isFetchInProgress]);
 
     useEffect(() => {
-        if (eventSource.current) {
-            eventSource.current.close();
-        }
+        const isSyncInProgressNew = syncStatus.is_sync_in_progress;
+        const isFetchInProgressNew = syncStatus.is_fetch_in_progress;
 
-        let interval:NodeJS.Timer;
-
-        eventSource.current = new EventSource(`${apiURL}/sync/status`);
-
-        eventSource.current.addEventListener('onStatusChange', (event) => {
-            const data = JSON.parse(event.data);
-
-            const isSyncInProgressNew = data.is_sync_in_progress;
-            const isFetchInProgressNew = data.is_fetch_in_progress;
-
-            // eslint-disable-next-line max-nested-callbacks
-            setIsSyncInProgress((previousValue) => {
-                return previousValue === isSyncInProgressNew ? previousValue : isSyncInProgressNew;
-            });
-
-            // eslint-disable-next-line max-nested-callbacks
-            setIsFetchInProgress((previousValue) => {
-                return previousValue === isFetchInProgressNew ? previousValue : isFetchInProgressNew;
-            });
+        setIsSyncInProgress((previousValue) => {
+            return previousValue === isSyncInProgressNew ? previousValue : isSyncInProgressNew;
         });
 
-        eventSource.current.onerror = (error) => {
-            // console.error('Sync SSE Error:', error);
-
-            eventSource.current?.close();
-
-            interval = setInterval(async () => {
-                // eslint-disable-next-line max-nested-callbacks
-                setReRunEvent((previousValue) => {
-                    return !previousValue;
-                });
-            }, RETRYTIMEINSECONDS);
-        };
-
-        return () => clearInterval(interval);
-    }, [reRunEvent, eventSource]);
+        setIsFetchInProgress((previousValue) => {
+            return previousValue === isFetchInProgressNew ? previousValue : isFetchInProgressNew;
+        });
+    }, [syncStatus]);
 
     useEffect(() => {
         const remainingTime = (lastFetchedAt + fetchInterval) - new Date().getTime();
@@ -325,6 +294,11 @@ function TimeLeftUntilNextFetchSetting() {
             </p>
         </Fragment>
     );
-}
+};
+
+TimeLeftUntilNextFetchSetting.propTypes = {
+    pluginServerRoute: PropTypes.string.isRequired,
+    syncStatus: PropTypes.object.isRequired,
+};
 
 export default TimeLeftUntilNextFetchSetting;

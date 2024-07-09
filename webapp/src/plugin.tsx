@@ -7,7 +7,7 @@ import PluginId from './plugin_id';
 
 import SyncIntervalSetting from './components/admin_settings/sync_interval_setting';
 import ToggleSyncSetting from './components/admin_settings/toggle_sync_setting';
-import TimeLeftUntilNextFetchSetting from './components/admin_settings/time_left_until_next_fetch_setting/TimeLeftUntilNextFetchSetting';
+import TimeLeftUntilNextFetchSetting from './components/admin_settings/time_left_until_next_fetch_setting';
 import UploadSlackExportFileSetting from './components/admin_settings/upload_slack_export_file_setting';
 
 import RHSView from './components/right_hand_sidebar';
