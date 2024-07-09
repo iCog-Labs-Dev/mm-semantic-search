@@ -5,7 +5,7 @@ import {PluginRegistry} from '@/types/mattermost-webapp';
 
 import PluginId from './plugin_id';
 
-import SyncIntervalSetting from './components/admin_settings/sync_interval_setting/SyncIntervalSetting';
+import SyncIntervalSetting from './components/admin_settings/sync_interval_setting';
 import ToggleSyncSetting from './components/admin_settings/toggle_sync_setting';
 import TimeLeftUntilNextFetchSetting from './components/admin_settings/time_left_until_next_fetch_setting/TimeLeftUntilNextFetchSetting';
 import UploadSlackExportFileSetting from './components/admin_settings/upload_slack_export_file_setting';

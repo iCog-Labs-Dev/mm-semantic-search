@@ -1,11 +1,13 @@
+import PropTypes from 'prop-types';
 import React, {Fragment, useCallback, useEffect, useState} from 'react';
 
 import './syncintervalSettingStyle.css';
 
-function SyncIntervalSetting() {
-    // eslint-disable-next-line no-process-env
-    // const apiURL = process.env.MM_PLUGIN_API_URL;
-    const apiURL = 'http://localhost:3333';
+interface SyncIntervalSettingProps {
+    pluginServerRoute: string;
+}
+
+const SyncIntervalSetting: React.FC<SyncIntervalSettingProps> = ({pluginServerRoute}) => {
     const successMessage = 'Sync interval updated successfully';
 
     const [loading, setLoading] = useState(false);
@@ -32,7 +34,7 @@ function SyncIntervalSetting() {
         let response;
 
         try {
-            const api = `${apiURL}/sync/fetch_interval`;
+            const api = `${pluginServerRoute}/sync/fetch_interval`;
 
             response = await fetch(api!, fetchOptions);
         } catch (err: any) {
@@ -60,7 +62,7 @@ function SyncIntervalSetting() {
             setHasError(true);
             setErrorMessage(jsonErr.message);
         }
-    }, [apiURL]);
+    }, [pluginServerRoute]);
 
     useEffect(() => {
         const firstRun = async () => {
@@ -164,7 +166,7 @@ function SyncIntervalSetting() {
         let response;
 
         try {
-            const urlWithParams = `${apiURL}/sync/fetch_interval?${queryString}`;
+            const urlWithParams = `${pluginServerRoute}/sync/fetch_interval?${queryString}`;
 
             response = await fetch(urlWithParams, postOptions);
         } catch (err: any) {
@@ -234,6 +236,10 @@ function SyncIntervalSetting() {
             </p>
         </Fragment>
     );
-}
+};
+
+SyncIntervalSetting.propTypes = {
+    pluginServerRoute: PropTypes.string.isRequired,
+};
 
 export default SyncIntervalSetting;
