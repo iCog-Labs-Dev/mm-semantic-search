@@ -17,14 +17,14 @@ type PurposeDetail struct {
 	Value string `json:"value"`
 }
 
-type Channel struct {
+type SlackChannel struct {
 	Id          string        `json:"id"`
 	Name        string        `json:"name"`
 	Purpose     PurposeDetail `json:"purpose"`
 	DateCreated int           `json:"created"`
 }
 
-type ChannelSpec struct {
+type SlackChannelSpec struct {
 	StoreAll  bool   `json:"store_all"`
 	StoreNone bool   `json:"store_none"`
 	StartDate string `json:"start_date"`
@@ -48,8 +48,8 @@ type Message struct {
 
 type Slack struct {
 	slackCollection  *chroma.Collection
-	Channels         []Channel
-	FilteredChannels map[string]ChannelSpec
+	Channels         []SlackChannel
+	FilteredChannels map[string]SlackChannelSpec
 }
 
 var slackInstance *Slack
