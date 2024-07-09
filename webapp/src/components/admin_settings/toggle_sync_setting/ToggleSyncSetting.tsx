@@ -110,23 +110,6 @@ const ToggleSyncSetting: React.FC<ToggleSyncSettingProps> = ({pluginServerRoute,
         }
     }, [wasSuccessful]);
 
-    useEffect(() => {
-        if (isFetchInProgress) {
-            setLoading(true);
-            try {
-                const syncWithServer = async () => {
-                    await startSync();
-                };
-                syncWithServer();
-            } catch (err: any) {
-                // eslint-disable-next-line no-console
-                console.warn('Error', err);
-            } finally {
-                setLoading(false);
-            }
-        }
-    }, [isFetchInProgress]);
-
     const startSync = async () => {
         const getOptions: RequestInit = {
             method: 'GET',
@@ -185,29 +168,8 @@ const ToggleSyncSetting: React.FC<ToggleSyncSettingProps> = ({pluginServerRoute,
         // eslint-disable-next-line no-console
         console.log('Sync progress: ', syncProgress);
 
-        if (!isFetchInProgress) {
-            setIsFetchInProgress(true);
-        }
-
         setProgressPercentage(syncProgress / 100);
     }, [syncProgress]);
-
-    useEffect(() => {
-        if (isSyncDone) {
-            setLoading(false);
-
-            setIsFetchInProgress(false);
-        }
-    }, [isSyncDone]);
-
-    useEffect(() => {
-        if (isSyncStopped) {
-            setLoading(false);
-
-            setIsFetchInProgress(false);
-            setIsSyncInProgress(false);
-        }
-    }, [isSyncStopped]);
 
     const handleSetIsSyncInProgress = async (checked: boolean) => {
         setLoading(true);
